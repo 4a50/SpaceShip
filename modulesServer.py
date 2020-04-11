@@ -6,4 +6,6 @@ while True:
     clientsocket, address = s.accept()
     print (f"Connection from {address} {clientsocket} has been established")
     print (f"Looping")
-    s.send(bytes"Connection Established my friend", "utf-8")
+    clientsocket.send(bytes("Connection Established my friend", "utf-8"))
+    clientsocket.close()
+    
