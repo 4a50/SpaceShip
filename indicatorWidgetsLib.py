@@ -2,87 +2,102 @@ from tkinter import *
 import numpy
 import math
 import time
-class Gauge1:
-    def __init__(self):
-        self.win = Tk()
-        self.win.title("Indicator Panel Widgets")
-        
-        #180 degree indicator
-        
-        self.scanvSize = 200
-        self.canvX = canvSize
-        self.canvY = canvSize
-        self.x = canvX / 2
-        self.y = canvY /2
-        self.centerxy = x, y
-        self.needleRadius = x * .60
-        self.needleangle = 0
-        self.gaugeWidth = canvX * .15
+
+class MessageLogger():
+    def __init__(self, win, msgBoxHeight, msgBoxWidth):
+        self.win = win
+        self.messLog = StringVar()
+        self.logger = []
+        self.msgBoxHeight = msgBoxHeight
+        self.msgBoxWidth = msgBoxWidth
+        self.messageFrame = LabelFrame(self.win, labelanchor='n',font=('Times', 20, 'italic'), text="Message Readout", bd=2 )
+        self.messageBox = Listbox(self.messageFrame, height=self.msgBoxHeight, width= self.msgBoxWidth, font=18, bg='black', fg='#75B676', listvariable=self.messLog).pack(fill=Y)
+        self.messageFrame.pack()    
+    def addMessage(self, addmsg):
+        self.logger.append(addmsg)
+        self.messLog.set(self.logger)
+
+class Gauge1():
+    def __init__(self, win, canvSize, gaugeTitle="Equiment Gauge", gaugeNomen="No name Specified"):
+        self.canvSize = canvSize
+        self.canvX = self.canvSize
+        self.canvY = self.canvSize
+        self.x = self.canvX / 2
+        self.y = self.canvY /2
+        self.centerxy = self.x, self.y
+        print ("canVsise:", self.canvSize)
+        self.win = win
+        self.gaugeNomen = gaugeNomen
+        self.gaugeTitle=gaugeTitle     
+        self.needleRadius = self.x * .60
+        self.needleangle = 120
+        self.gaugeWidth = self.canvX * .15
         self.canvEdgeUL = 0.2
         self.canvEdgeBR = .8
-        self.arcCoordx0 = canvX * canvEdgeUL
-        self.arcCoordy0 = canvY * canvEdgeUL
-        self.arcCoordx1 = canvX * canvEdgeBR
-        self.arcCoordy1 = canvY * canvEdgeBR
-        self.arcCoords = arcCoordx0, arcCoordy0, arcCoordx1, arcCoordy1
-        self.frameIndicator = LabelFrame(self.win, labelanchor='n',text="240 Degree Radial Indicator", bd=2 )
-        self.ind1Canv = Canvas(frameIndicator, height=self.canvY, width=self.canvX, bd=5, bg="black")
-        self.ind1Canv.pack()
-        self.frameIndicator.pack()
-
+        self.arcCoordx0 = self.canvX * self.canvEdgeUL
+        self.arcCoordy0 = self.canvY * self.canvEdgeUL
+        self.arcCoordx1 = self.canvX * self.canvEdgeBR
+        self.arcCoordy1 = self.canvY * self.canvEdgeBR
+        self.arcCoords = self.arcCoordx0, self.arcCoordy0, self.arcCoordx1, self.arcCoordy1
+        self.gaugeFrame = LabelFrame(self.win, labelanchor='n',font=('Times', 20, 'italic'), text=gaugeTitle, bd=2 )
+        self.guageCanv = Canvas(self.gaugeFrame, height=self.canvY, width=self.canvX, bd=5, bg="black")
+        self.messageLogger = StringVar()
+        self.messageList = []
     #TODO: Figure the equation to move a needle along an ellipse 
     #TODO: Allow customization of the green, yellow, and red
-
-        self.yellowSeg = ind1Canv.create_arc(arcCoords, start=359,
-        extent=119,width=gaugeWidth, outline="#e3ca09", style=ARC)
-        self.redSeg = ind1Canv.create_arc(arcCoords, start=300,
-        extent=59,width=gaugeWidth, outline="red", style=ARC)
-        self.GreenSeg = ind1Canv.create_arc(arcCoords, start=118,
-        extent=122,width=gaugeWidth, outline="green", style=ARC)
-        self.indCenterLine = ind1Canv.create_arc(arcCoords, start=300, extent=300, width=2, style=ARC, outline='white')
-        print ("gaugeWidth", gaugeWidth)
+        self.yellowSeg = self.guageCanv.create_arc(self.arcCoords, start=359,
+        extent=119,width=self.gaugeWidth, outline="#e3ca09", style=ARC)
+        self.redSeg = self.guageCanv.create_arc(self.arcCoords, start=300,
+        extent=59,width=self.gaugeWidth, outline="red", style=ARC)
+        self.GreenSeg = self.guageCanv.create_arc(self.arcCoords, start=118,
+        extent=122,width=self.gaugeWidth, outline="green", style=ARC)
+        self.indCenterLine = self.guageCanv.create_arc(self.arcCoords, start=300, extent=300, width=2, style=ARC, outline='white')
         # Tick Marks
         for i in range(0, 330, 30):
             startArc = 240 - i
             if startArc == 0:
                 startArc = 359
-                print ("If Statement Reached")
             if startArc == -60:
                 startArc += 2
-            ind1Canv.create_arc(arcCoords, start=startArc, extent=-2,width=gaugeWidth*.70, outline="white", style=ARC)
-            print (startArc)
+            self.guageCanv.create_arc(self.arcCoords, start=startArc, extent=-2,width=self.gaugeWidth*.70, outline="white", style=ARC)
         tickSpacing = 3
-        if (gaugeWidth * .2) <= 6:
+        if (self.gaugeWidth * .2) <= 6:
             tickSpacing = 6
-            print("Tickspacing set to six")
         for i in range(0, 300, tickSpacing):
-            print ("inner tick width", gaugeWidth * .2)
             startArc = 240 - i
             if startArc == 0:
                 startArc = 359
             if startArc == -60:
                 startArc += 2
-            ind1Canv.create_arc(arcCoords, start=startArc, extent=-1,width=gaugeWidth * .2, outline="white", style=ARC)
-            print (startArc)
+            self.guageCanv.create_arc(self.arcCoords, start=startArc, extent=-1,width=self.gaugeWidth * .2, outline="white", style=ARC)
         
-            self.needlePos = ind1Canv.create_line(centerxy, x + (needleRadius * math.cos(math.radians(needleangle))), y + (needleRadius * math.sin(math.radians(needleangle))) , width=gaugeWidth * .1, 
-            fill='#e36409', arrow=LAST)
-            percentage = 0
-            gaugeTextStr = str(percentage) + "\n%"
-            displayText = ind1Canv.create_text(x, y * 1.7, text=gaugeTextStr, fill="white")
-    def updateValue (self, percentage)
-            percentage = (i * 3) + 120
-            needleangle = percentage
-            if i >=360:
-                needleangle-= 360
-            ind1Canv.coords(needlePos, x, y, x + (needleRadius * math.cos(math.radians(needleangle))), y + (needleRadius * math.sin(math.radians(needleangle))))    
-            print ("Percentage:", i)
-            gaugeTextStr = str(i) + "\n%"
-            ind1Canv.itemconfigure(displayText, font=('Times', str(int(canvSize / 13)), 'bold'), text=gaugeTextStr)
-            ind1Canv.update()
-            time.sleep(.05)    
-            win.mainloop()
+        self.needlePos = self.guageCanv.create_line(self.centerxy, self.x + (self.needleRadius * math.cos(math.radians(self.needleangle))), 
+        self.y + (self.needleRadius * math.sin(math.radians(self.needleangle))) , width=self.gaugeWidth * .1, fill='#e36409', arrow=LAST)
+        self.gaugeTextStr = "0\n" + self.gaugeNomen
+        self.displayText = self.guageCanv.create_text(self.x, self.y * 1.7, text=self.gaugeTextStr, fill="white", justify=CENTER)
+        self.guageCanv.pack(side=LEFT)
+        self.gaugeFrame.pack(side=LEFT)
+    def updateValue (self, deflPercent=0):
+            if deflPercent > 100:
+                deflPercent = 100
+            if deflPercent < 0:
+                deflPercent = 0
+            self.needleangle = (deflPercent * 3) + 120
+            if self.needleangle >=360:
+                self.needleangle-= 360
+            self.guageCanv.coords(self.needlePos, self.x, self.y, self.x + (self.needleRadius * math.cos(math.radians(self.needleangle))), self.y + (self.needleRadius * math.sin(math.radians(self.needleangle))))    
+            self.gaugeTextStr = str(deflPercent) + "\n" + self.gaugeNomen
+            self.guageCanv.itemconfigure(self.displayText, font=('Times', str(int(self.canvSize / 13)), 'bold'), text=self.gaugeTextStr)
+            self.guageCanv.update()
+class vertMeter1:
+    def __init__(self, win, canvSize):
+        self.win = win
+        self.canvSize = canvSize
+        self.canvX = self.canvSize
+        self.canvY = self.canvSize
+        self.x = self.canvX / 2
+        self.y = self.canvY /2
+        self.centerxy = self.x, self.y
+        print ("canVsise:", self.canvSize)
 
-
-if __name__ == '__main__':
-    Main()
+        
