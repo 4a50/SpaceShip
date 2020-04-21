@@ -12,7 +12,7 @@ class MessageLogger():
         self.msgBoxWidth = msgBoxWidth
         self.messageFrame = LabelFrame(self.win, labelanchor='n',font=('Times', 20, 'italic'), text="Message Readout", bd=2 )
         self.messageBox = Listbox(self.messageFrame, height=self.msgBoxHeight, width= self.msgBoxWidth, font=18, bg='black', fg='#75B676', listvariable=self.messLog).pack(fill=Y)
-        self.messageFrame.pack()    
+        self.messageFrame.pack(side = LEFT)    
     def addMessage(self, addmsg):
         self.logger.append(addmsg)
         self.messLog.set(self.logger)
@@ -25,7 +25,6 @@ class Gauge1():
         self.x = self.canvX / 2
         self.y = self.canvY /2
         self.centerxy = self.x, self.y
-        print ("canVsise:", self.canvSize)
         self.win = win
         self.gaugeNomen = gaugeNomen
         self.gaugeTitle=gaugeTitle     
@@ -43,6 +42,7 @@ class Gauge1():
         self.guageCanv = Canvas(self.gaugeFrame, height=self.canvY, width=self.canvX, bd=5, bg="black")
         self.messageLogger = StringVar()
         self.messageList = []
+        self.meterLevel = 40
     #TODO: Figure the equation to move a needle along an ellipse 
     #TODO: Allow customization of the green, yellow, and red
         self.yellowSeg = self.guageCanv.create_arc(self.arcCoords, start=359,
@@ -75,6 +75,7 @@ class Gauge1():
         self.y + (self.needleRadius * math.sin(math.radians(self.needleangle))) , width=self.gaugeWidth * .1, fill='#e36409', arrow=LAST)
         self.gaugeTextStr = "0\n" + self.gaugeNomen
         self.displayText = self.guageCanv.create_text(self.x, self.y * 1.7, text=self.gaugeTextStr, fill="white", justify=CENTER)
+
         self.guageCanv.pack(side=LEFT)
         self.gaugeFrame.pack(side=LEFT)
     def updateValue (self, deflPercent=0):
@@ -89,15 +90,123 @@ class Gauge1():
             self.gaugeTextStr = str(deflPercent) + "\n" + self.gaugeNomen
             self.guageCanv.itemconfigure(self.displayText, font=('Times', str(int(self.canvSize / 13)), 'bold'), text=self.gaugeTextStr)
             self.guageCanv.update()
+    def testGauge(self):
+        for i in range(0, 201):
+            g1.updateValue((i / 4))
+            g2.updateValue(i + 20)
+            time.sleep(.05)
+
 class vertMeter1:
-    def __init__(self, win, canvSize):
+    def __init__(self, win, canvSize, meterTitle, red=90, yellow=60):
         self.win = win
+        self.meterTitle=meterTitle
         self.canvSize = canvSize
-        self.canvX = self.canvSize
+        self.canvX = self.canvSize / 2
         self.canvY = self.canvSize
         self.x = self.canvX / 2
         self.y = self.canvY /2
+        self.canvMinX = .4
+        self.canvMinY = .15
+        self.canvMaxX = .6
+        self.canvMaxY = .8
         self.centerxy = self.x, self.y
-        print ("canVsise:", self.canvSize)
+        self.meterPixels = (self.canvMaxY * self.canvY) - (self.canvMaxX * self.canvX)
+        print ("meterPixels: ", self.meterPixels)
+        self.meterFrame = LabelFrame(self.win, labelanchor='n',font=('Times',  round(canvSize * .033), 'italic'), text=self.meterTitle, bd=2 ) #Changed from Font size 20
+        self.meterCanv = Canvas(self.meterFrame, height=self.canvY, width=self.canvX, bd=5, bg="black")
+        self.meterLevel = 40
+        # Color Bands
+        self.red = red
+        self.yellow = yellow
+        
+
+        print ("\n", self.canvX, self.canvY)
+        print (self.canvX * self.canvMinX, self.canvY * self.canvMinY, self.canvX * self.canvMaxX, self.canvY * self.canvMaxY)
+        
+        #
+        self.rectX0 = self.canvX * self.canvMinX
+        self.rectY0 = self.canvY * self.canvMinY
+        self.rectX1= self.canvX * self.canvMaxX
+        self.rectY1 = self.canvY * self.canvMaxY
+        self.meterPixels = (self.rectY1 - self.rectY0)
+        print ("meter: ", self.meterPixels)
+                
+        self.meterCanv.create_rectangle(self.rectX0, self.rectY0, self.rectX1, self.rectY1, outline='white', fill='grey')
+        self.meterIndication = self.meterCanv.create_rectangle(self.rectX0, self.rectY0 + self.meterLevel, self.rectX1, self.rectY1, outline='white', fill='red')
+        triIndicatorPixelDist = 10
+        
+        self.rTriIndicator = self.meterCanv.create_polygon( self.rectX1, self.rectY0 + self.meterLevel,  self.rectX1 + triIndicatorPixelDist,(self.rectY0 + self.meterLevel) + triIndicatorPixelDist,  
+        self.rectX1 + triIndicatorPixelDist,(self.rectY0 + self.meterLevel) - triIndicatorPixelDist, fill='white' )
+        self.lTriIndicator = self.meterCanv.create_polygon( self.rectX0, self.rectY0 + self.meterLevel,  self.rectX0 - triIndicatorPixelDist,(self.rectY0 + self.meterLevel) + triIndicatorPixelDist,  
+        self.rectX0 - triIndicatorPixelDist,(self.rectY0 + self.meterLevel) - triIndicatorPixelDist, fill='white' )
+        floattostr = str(self.meterLevel)
+        print (type(floattostr))
+        self.indicatorNum = self.meterCanv.create_text ((self.rectX1 - (self.rectX1 - self.rectX0) /2), self.rectY1 + self.canvSize * .050, text=floattostr, fill='white', font=('Times', str(int(self.canvSize / 30)), 'bold')) # changed + 30
+
+        bigTick = .033 * self.canvSize #20
+        lilTick = .0166 * self.canvSize    #10
+        xAxis = self.rectX1 + 20
+        for i in range(101):
+            offset = (self.meterPixels * (i / 100))
+            print (offset, self.rectY1 - offset)
+            if i == 0 or i % 10 == 0:
+                self.meterCanv.create_line(xAxis, self.rectY1 - offset, xAxis + bigTick, self.rectY1 - offset, fill='orange')
+                self.meterCanv.create_text(xAxis + bigTick+(self.canvSize * .0166), self.rectY1 - offset, text=str(i), fill="white") #20
+            elif i % 2 == 0:
+                self.meterCanv.create_line(xAxis, self.rectY1 - offset, xAxis + lilTick, self.rectY1 - offset, fill='orange')
+
+
+        
+        
+        self.meterCanv.pack(side = LEFT)
+        self.meterFrame.pack(side=LEFT)
+        
+        #
+        
+    def UpdateLevel(self, percent):
+        triIndicatorPixelDist = self.canvSize * .0167 #10
+        if percent > 100: 
+            percent = 100
+        
+        self.meterLevel = self.meterPixels * round((percent / 100), 2)
+        self.meterCanv.coords(self.meterIndication, self.rectX0, self.rectY1 - self.meterLevel, self.rectX1, self.rectY1)
+        
+        
+        self.meterCanv.coords(self.rTriIndicator, self.rectX1, self.rectY1 - self.meterLevel,  self.rectX1 + triIndicatorPixelDist,(self.rectY1 - self.meterLevel) + triIndicatorPixelDist,  
+        self.rectX1 + triIndicatorPixelDist,(self.rectY1 - self.meterLevel) - triIndicatorPixelDist)
+        
+        self.meterCanv.coords(self.lTriIndicator, self.rectX0, self.rectY1 - self.meterLevel,  self.rectX0 - triIndicatorPixelDist,(self.rectY1 - self.meterLevel) + triIndicatorPixelDist,  
+        self.rectX0 - triIndicatorPixelDist,(self.rectY1 - self.meterLevel) - triIndicatorPixelDist)
+
+        self.meterCanv.itemconfigure(self.indicatorNum, text = str(round(float(percent),1)))
+        self.meterCanv.update()
+        if percent < self.yellow:
+            self.meterCanv.itemconfigure(self.meterIndication, fill='green')
+        elif percent >= self.yellow and percent < self.red:
+            self.meterCanv.itemconfigure(self.meterIndication, fill='yellow')
+        elif percent >= self.red:
+            self.meterCanv.itemconfigure(self.meterIndication, fill='red')
+    def TestMeter(self):
+        for i in range(0, 201):
+            self.UpdateLevel( i / 2)
+            time.sleep(.02)
+        self.UpdateLevel(0)
+        time.sleep(.2)
+        self.UpdateLevel(20)
+        time.sleep(.2)
+        self.UpdateLevel(40)
+        time.sleep(.2)
+        self.UpdateLevel(60)    
+        time.sleep(.2)
+        self.UpdateLevel(91)
+        time.sleep(.2)
+        self.UpdateLevel(33.25)
+        time.sleep(.2)
+    
+        
+
+
+
+
 
         
