@@ -38,9 +38,8 @@ class Gauge1():
         self.arcCoordx1 = self.canvX * self.canvEdgeBR
         self.arcCoordy1 = self.canvY * self.canvEdgeBR
         self.arcCoords = self.arcCoordx0, self.arcCoordy0, self.arcCoordx1, self.arcCoordy1
-        self.gaugeFrame = LabelFrame(self.win, labelanchor='n',font=('Times', 20, 'italic'), text=gaugeTitle, bd=2 )
+        self.gaugeFrame = LabelFrame(self.win, labelanchor='n',font=('Times',  round(canvSize * .05), 'italic'), text=gaugeTitle, bd=2 )
         self.guageCanv = Canvas(self.gaugeFrame, height=self.canvY, width=self.canvX, bd=5, bg="black")
-        self.messageLogger = StringVar()
         self.messageList = []
         self.meterLevel = 40
     #TODO: Figure the equation to move a needle along an ellipse 
@@ -74,7 +73,7 @@ class Gauge1():
         self.needlePos = self.guageCanv.create_line(self.centerxy, self.x + (self.needleRadius * math.cos(math.radians(self.needleangle))), 
         self.y + (self.needleRadius * math.sin(math.radians(self.needleangle))) , width=self.gaugeWidth * .1, fill='#e36409', arrow=LAST)
         self.gaugeTextStr = "0\n" + self.gaugeNomen
-        self.displayText = self.guageCanv.create_text(self.x, self.y * 1.7, text=self.gaugeTextStr, fill="white", justify=CENTER)
+        self.displayText = self.guageCanv.create_text(self.x, self.y * 1.7, text=self.gaugeTextStr, fill="white", justify=CENTER, font=('Times', str(int(self.canvSize / 13)), 'bold'))
 
         self.guageCanv.pack(side=LEFT)
         self.gaugeFrame.pack(side=LEFT)
@@ -92,32 +91,33 @@ class Gauge1():
             self.guageCanv.update()
     def testGauge(self):
         for i in range(0, 201):
-            g1.updateValue((i / 4))
-            g2.updateValue(i + 20)
-            time.sleep(.05)
+            self.updateValue((i / 2))
+        self.updateValue()
 
 class vertMeter1:
     def __init__(self, win, canvSize, meterTitle, red=90, yellow=60):
         self.win = win
         self.meterTitle=meterTitle
         self.canvSize = canvSize
-        self.canvX = self.canvSize / 2
+        self.canvX = self.canvSize / 3
         self.canvY = self.canvSize
         self.x = self.canvX / 2
         self.y = self.canvY /2
+        self.unitsDisc = "Percent"
         self.canvMinX = .4
         self.canvMinY = .15
-        self.canvMaxX = .6
-        self.canvMaxY = .8
+        self.canvMaxX = .65
+        self.canvMaxY = .85
         self.centerxy = self.x, self.y
         self.meterPixels = (self.canvMaxY * self.canvY) - (self.canvMaxX * self.canvX)
         print ("meterPixels: ", self.meterPixels)
-        self.meterFrame = LabelFrame(self.win, labelanchor='n',font=('Times',  round(canvSize * .033), 'italic'), text=self.meterTitle, bd=2 ) #Changed from Font size 20
+        self.meterFrame = LabelFrame(self.win, labelanchor='n',font=('Times',  round(canvSize * .05), 'italic'), text=self.meterTitle, bd=2 ) #Changed from Font size 20
         self.meterCanv = Canvas(self.meterFrame, height=self.canvY, width=self.canvX, bd=5, bg="black")
         self.meterLevel = 40
         # Color Bands
         self.red = red
         self.yellow = yellow
+        print ("self.y", self.y)
         
 
         print ("\n", self.canvX, self.canvY)
@@ -145,7 +145,7 @@ class vertMeter1:
 
         bigTick = .033 * self.canvSize #20
         lilTick = .0166 * self.canvSize    #10
-        xAxis = self.rectX1 + 20
+        xAxis = self.rectX1 + (self.rectX1 * .052)
         for i in range(101):
             offset = (self.meterPixels * (i / 100))
             print (offset, self.rectY1 - offset)
@@ -154,7 +154,11 @@ class vertMeter1:
                 self.meterCanv.create_text(xAxis + bigTick+(self.canvSize * .0166), self.rectY1 - offset, text=str(i), fill="white") #20
             elif i % 2 == 0:
                 self.meterCanv.create_line(xAxis, self.rectY1 - offset, xAxis + lilTick, self.rectY1 - offset, fill='orange')
-
+        print ("len of unitDisc:", len(self.unitsDisc))
+        print ("self.y", self.y)
+        textVertCenter = self.y - (len(self.unitsDisc) / 2)
+        print ("textVertCenter:", textVertCenter)
+        self.meterCanv.create_text(self.rectX0 - (self.rectX1 * .30) , self.y, text=self.unitsDisc, fill='orange', angle=90, font=('Times', str(int(self.canvSize / 20)), 'bold'))
 
         
         
@@ -202,11 +206,35 @@ class vertMeter1:
         time.sleep(.2)
         self.UpdateLevel(33.25)
         time.sleep(.2)
+
+class IndLights:
+    def __init__(self, win, size, indicatorTitle, labelList, num_indicators):
+        self.win = win
+        self.num_divisions = num_indicators
+        self.size=size
+        self.indicatorObjs = [None] * self.num_divisions
+        self.indicatorLabels = labelList
+        print (self.indicatorObjs)
+        x = size
+        y = size / self.num_divisions #100
+        self.indicatorFrame = LabelFrame (self.win, labelanchor='n',font=('Times',  round(size * .05), 'italic'), text=indicatorTitle, bd=2 )
+        self.canvIndicator = Canvas(self.indicatorFrame, width=x, height=y)
+
+        x = size / self.num_divisions
+        circCent = x / 2
+        circRadius = circCent / 2
+
+        yUpper = (y / 2) + circRadius
+        yLower = (y / 2) - circRadius
+
+        print (x, circCent, circRadius)
+        xpos = 0
+        for i in range(self.num_divisions):
+            self.indicatorObjs[i] = self.canvIndicator.create_oval(xpos + circCent - circRadius, yUpper, xpos + circCent + circRadius, yLower, fill='green')
+            xpos += x
+
+        self.canvIndicator.pack(side=LEFT) 
+        self.indicatorFrame.pack(side=LEFT)
+
+
     
-        
-
-
-
-
-
-        
