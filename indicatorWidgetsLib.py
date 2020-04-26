@@ -4,19 +4,20 @@ import math
 import time
 
 class MessageLogger():
-    def __init__(self, win, msgBoxHeight, msgBoxWidth):
+    def __init__(self, win, msgBoxWidth, msgBoxHeight, ):
         self.win = win
         self.messLog = StringVar()
         self.logger = []
         self.msgBoxHeight = msgBoxHeight
         self.msgBoxWidth = msgBoxWidth
-        self.messageFrame = LabelFrame(self.win, labelanchor='n',font=('Times', 20, 'italic'), text="Message Readout", bd=2 )
-        self.messageBox = Listbox(self.messageFrame, height=self.msgBoxHeight, width= self.msgBoxWidth, font=18, bg='black', fg='#75B676', listvariable=self.messLog).pack(fill=Y)
-        self.messageFrame.pack(side = LEFT)    
+        self.messageFrame = LabelFrame(self.win, labelanchor='n',font=('Times', 20, 'italic'), text="Message Readout", bd=2, background='black', foreground='white'  )
+        self.messageBox = Listbox(self.messageFrame, height=self.msgBoxHeight, width= self.msgBoxWidth, font=18, bg='black', fg='#75B676', listvariable=self.messLog).grid(sticky=N+E+S+W)
+
     def addMessage(self, addmsg):
         self.logger.append(addmsg)
         self.messLog.set(self.logger)
-
+    def setPosFrame(self, **options):
+        self.messageFrame.grid(options)
 class Gauge1():
     def __init__(self, win, canvSize, gaugeTitle="Equiment Gauge", gaugeNomen="No name Specified"):
         self.canvSize = canvSize
@@ -38,8 +39,8 @@ class Gauge1():
         self.arcCoordx1 = self.canvX * self.canvEdgeBR
         self.arcCoordy1 = self.canvY * self.canvEdgeBR
         self.arcCoords = self.arcCoordx0, self.arcCoordy0, self.arcCoordx1, self.arcCoordy1
-        self.gaugeFrame = LabelFrame(self.win, labelanchor='n',font=('Times',  round(canvSize * .05), 'italic'), text=gaugeTitle, bd=2 )
-        self.guageCanv = Canvas(self.gaugeFrame, height=self.canvY, width=self.canvX, bd=5, bg="black")
+        self.gaugeFrame = LabelFrame(self.win, labelanchor='n',font=('Times',  round(canvSize * .05), 'italic'), text=gaugeTitle, bd=2, bg = "black", fg = "white")
+        self.guageCanv = Canvas(self.gaugeFrame, height=self.canvY, width=self.canvX, bd=5, bg = "black")
         self.messageList = []
         self.meterLevel = 40
     #TODO: Figure the equation to move a needle along an ellipse 
@@ -75,8 +76,8 @@ class Gauge1():
         self.gaugeTextStr = "0\n" + self.gaugeNomen
         self.displayText = self.guageCanv.create_text(self.x, self.y * 1.7, text=self.gaugeTextStr, fill="white", justify=CENTER, font=('Times', str(int(self.canvSize / 13)), 'bold'))
 
-        self.guageCanv.pack(side=LEFT)
-        self.gaugeFrame.pack(side=LEFT)
+        self.guageCanv.grid()
+        
     def updateValue (self, deflPercent=0):
             if deflPercent > 100:
                 deflPercent = 100
@@ -93,7 +94,8 @@ class Gauge1():
         for i in range(0, 201):
             self.updateValue((i / 2))
         self.updateValue()
-
+    def setPosFrame(self, **options):
+        self.gaugeFrame.grid(**options)
 class vertMeter1:
     def __init__(self, win, canvSize, meterTitle, red=90, yellow=60):
         self.win = win
@@ -111,7 +113,7 @@ class vertMeter1:
         self.centerxy = self.x, self.y
         self.meterPixels = (self.canvMaxY * self.canvY) - (self.canvMaxX * self.canvX)
         print ("meterPixels: ", self.meterPixels)
-        self.meterFrame = LabelFrame(self.win, labelanchor='n',font=('Times',  round(canvSize * .05), 'italic'), text=self.meterTitle, bd=2 ) #Changed from Font size 20
+        self.meterFrame = LabelFrame(self.win, labelanchor='n',font=('Times',  round(canvSize * .05), 'italic'), text=self.meterTitle, bd=2, bg = "black", fg = "white" ) #Changed from Font size 20
         self.meterCanv = Canvas(self.meterFrame, height=self.canvY, width=self.canvX, bd=5, bg="black")
         self.meterLevel = 40
         # Color Bands
@@ -162,8 +164,8 @@ class vertMeter1:
 
         
         
-        self.meterCanv.pack(side = LEFT)
-        self.meterFrame.pack(side=LEFT)
+        self.meterCanv.grid()
+        
         
         #
         
@@ -206,35 +208,65 @@ class vertMeter1:
         time.sleep(.2)
         self.UpdateLevel(33.25)
         time.sleep(.2)
-
+    def setPosFrame(self, **options):
+        self.meterFrame.grid(**options)
 class IndLights:
-    def __init__(self, win, size, indicatorTitle, labelList, num_indicators):
+    def __init__(self, win, size, indicatorTitle, labelList, horizTrue):
         self.win = win
-        self.num_divisions = num_indicators
+        self.num_divisions = len(labelList)
         self.size=size
         self.indicatorObjs = [None] * self.num_divisions
         self.indicatorLabels = labelList
         print (self.indicatorObjs)
-        x = size
-        y = size / self.num_divisions #100
-        self.indicatorFrame = LabelFrame (self.win, labelanchor='n',font=('Times',  round(size * .05), 'italic'), text=indicatorTitle, bd=2 )
-        self.canvIndicator = Canvas(self.indicatorFrame, width=x, height=y)
-
-        x = size / self.num_divisions
-        circCent = x / 2
-        circRadius = circCent / 2
-
-        yUpper = (y / 2) + circRadius
-        yLower = (y / 2) - circRadius
-
-        print (x, circCent, circRadius)
-        xpos = 0
-        for i in range(self.num_divisions):
-            self.indicatorObjs[i] = self.canvIndicator.create_oval(xpos + circCent - circRadius, yUpper, xpos + circCent + circRadius, yLower, fill='green')
-            xpos += x
-
-        self.canvIndicator.pack(side=LEFT) 
-        self.indicatorFrame.pack(side=LEFT)
+        if horizTrue == True:
+            x = size
+            y = size / self.num_divisions #100
+        else:
+            x = (size / self.num_divisions)
+            y = size
+        self.indicatorFrame = LabelFrame (self.win, labelanchor='n',font=('Times',  round(size * .05), 'italic'), text=indicatorTitle, bd=2, background='black', foreground='white')
+        
+        self.canvIndicator = Canvas(self.indicatorFrame, width=x, height=y, bg='black',highlightthickness=1, highlightcolor='purple')
+        self.canvIndicatorLabels = Canvas(self.indicatorFrame, width=x, height = y, bg='black', bd=0, highlightthickness=0)
 
 
-    
+        if horizTrue == TRUE:
+            self.canvIndicatorLabels = Canvas(self.indicatorFrame, width=x, height = y / 2, bg='black', bd=0, highlightthickness=0)
+            x = size / self.num_divisions
+            circCent = x / 2
+            circRadius = circCent / 2        
+            yUpper = (y / 2) + circRadius
+            yLower = (y / 2) - circRadius
+            print (x, circCent, circRadius)
+            xpos = 0
+            for i in range(self.num_divisions):
+                self.indicatorObjs[i] = self.canvIndicator.create_oval(xpos + circCent - circRadius, yUpper, xpos + circCent + circRadius, yLower, fill='green')
+                self.canvIndicatorLabels.create_text(xpos + circCent, circCent - circRadius, text=labelList[i], justify=CENTER, font=('Times', str(int(self.size / 25)), 'bold'), fill='white')
+                xpos += x
+            self.canvIndicatorLabels.grid(column=0, row=0)
+            self.canvIndicator.grid(column=0, row=1) 
+        else:
+            y = size / self.num_divisions
+            circCent = y / 2
+            circRadius = circCent / 2        
+            xUpper = (x / 2) + circRadius
+            xLower = (x / 2) - circRadius
+            ypos = 0
+            for i in range(self.num_divisions):
+                self.indicatorObjs[i] = self.canvIndicator.create_oval(xUpper, ypos + circCent - circRadius, xLower, ypos + circCent + circRadius, fill='green')
+                self.canvIndicatorLabels.create_text(circCent, ypos + circCent, text=labelList[i], justify=CENTER, font=('Times', str(int(self.size / 18)), 'bold'), fill = 'white')
+                ypos += x
+            self.canvIndicatorLabels.grid(column=0, row=0)
+            self.canvIndicator.grid(column=1, row=0) 
+        self.indicatorFrame.grid()
+
+    def UpdateIndicator (self, ind=0, indState=0):
+        if indState == 0:
+            self.canvIndicator.itemconfigure(self.indicatorObjs[indState], fill='green')
+        elif indState == 1:
+            self.canvIndicator.itemconfigure(self.indicatorObjs[ind], fill="red")
+    def setPosFrame(self, **options):
+        self.indicatorFrame.grid(**options)
+        # self.indicatorFrame.grid(row=row, column=column, columnspan=columnSpan, rowspan=rowSpan)
+    # def setPosFrame(self, row, column, rowSpan = 1, columnSpan = 1):
+    #     self.indicatorFrame.grid(row=row, column=column, columnspan=columnSpan, rowspan=rowSpan)
